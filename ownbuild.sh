@@ -25,7 +25,7 @@ mkdir -p "$AIROOTFS" "$ISO_ROOT" "$OUTPUT"
 
 # ===== ベースシステム作成 =====
 echo "[*] ベースシステムを pacstrap でインストール..."
-pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso 
+pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xorg-server
 # ===== 設定ファイル追加 =====
 echo "[*] 基本設定を投入..."
 echo "keita" > "$AIROOTFS/etc/hostname"
@@ -46,10 +46,24 @@ cp /etc/pacman.conf "$AIROOTFS/etc/"
 cp /etc/pacman.d/mirrorlist "$AIROOTFS/etc/pacman.d/"
 
 
+mkdir -p "$AIROOTFS/etc/lightdm"
+sed -i 's/^#autologin-user=.*/autologin-user=root/' "$AIROOTFS/etc/lightdm/lightdm.conf"
+sed -i 's/^#autologin-session=.*/autologin-session=cinnamon/' "$AIROOTFS/etc/lightdm/lightdm.conf"
 
 # chroot先で archiso パッケージをインストール
 
 # archisoパッケージ導入とHOOKS設定
+mkdir -p "$AIROOTFS/usr/share/backgrounds"
+cp image.png "$AIROOTFS/usr/share/backgrounds/"
+mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
+cat <<EOF > "$AIROOTFS/etc/dconf/db/local.d/00-wallpaper"
+[org/cinnamon/desktop/background]
+picture-uri='file:///usr/share/backgrounds/image.png'
+EOF
+
+arch-chroot "$AIROOTFS" dconf update
+arch-chroot "$AIROOTFS" systemctl set-default graphical.target
+arch-chroot "$AIROOTFS" systemctl enable lightdm
 
 
 sed -i 's/^HOOKS=.*/HOOKS=(base udev archiso block filesystems keyboard fsck)/' \

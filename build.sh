@@ -99,7 +99,7 @@ cp /etc/pacman.d/mirrorlist "$AIROOTFS/etc/pacman.d/"
 
 
 # root パスワード設定（例: "root"）
-echo "frank:frank" | arch-chroot "$AIROOTFS" chpasswd
+echo "root:root" | arch-chroot "$AIROOTFS" chpasswd
 
 # systemdサービス有効化
 arch-chroot "$AIROOTFS" systemctl enable NetworkManager

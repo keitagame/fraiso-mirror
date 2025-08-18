@@ -25,8 +25,7 @@ mkdir -p "$AIROOTFS" "$ISO_ROOT" "$OUTPUT"
 
 # ===== ベースシステム作成 =====
 echo "[*] ベースシステムを pacstrap でインストール..."
-pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso xorg lxqt sddm openbox lxqt-qtplugin xterm
-
+pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso 
 # ===== 設定ファイル追加 =====
 echo "[*] 基本設定を投入..."
 echo "keita" > "$AIROOTFS/etc/hostname"
@@ -46,26 +45,6 @@ mkdir -p "$AIROOTFS/etc/pacman.d"
 cp /etc/pacman.conf "$AIROOTFS/etc/"
 cp /etc/pacman.d/mirrorlist "$AIROOTFS/etc/pacman.d/"
 
-mkdir -p "$AIROOTFS/etc/sddm.conf.d"
-cat <<EOF > "$AIROOTFS/etc/sddm.conf.d/autologin.conf"
-[Autologin]
-User=root
-Session=lxqt.desktop
-EOF
-
-# SDDM を有効化
-arch-chroot "$AIROOTFS" systemctl enable sddm
-
-mkdir -p "$AIROOTFS/usr/share/backgrounds"
-cp image.jpg "$AIROOTFS/usr/share/backgrounds/frankos.jpg"
-
-# LXQtの設定ディレクトリを作成
-mkdir -p "$AIROOTFS/etc/xdg/pcmanfm-qt/lxqt"
-cat <<EOF > "$AIROOTFS/etc/xdg/pcmanfm-qt/lxqt/settings.conf"
-[Desktop]
-wallpaper=/usr/share/backgrounds/frankos.jpg
-wallpaper_mode=stretch
-EOF
 
 
 # chroot先で archiso パッケージをインストール

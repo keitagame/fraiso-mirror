@@ -25,18 +25,19 @@ mkdir -p "$AIROOTFS" "$ISO_ROOT" "$OUTPUT"
 
 # ===== ベースシステム作成 =====
 echo "[*] ベースシステムを pacstrap でインストール..."
-pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon gdm xorg-server xorg-xinit gvfs gvfs-smb network-manager-applet
-
+pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xorg-server noto-fonts noto-fonts-cjk noto-fonts-emoji fcitx5-im fcitx5-mozc fcitx5-configtool
 # ===== 設定ファイル追加 =====
 echo "[*] 基本設定を投入..."
 echo "keita" > "$AIROOTFS/etc/hostname"
+
 cat <<EOF > "$AIROOTFS/etc/vconsole.conf"
-KEYMAP=us
+KEYMAP=jp106
 FONT=Lat2-Terminus16
 EOF
 
 cat <<EOF > "$AIROOTFS/etc/locale.gen"
 en_US.UTF-8 UTF-8
+ja_JP.UTF-8 UTF-8
 EOF
 
 
@@ -46,12 +47,37 @@ mkdir -p "$AIROOTFS/etc/pacman.d"
 cp /etc/pacman.conf "$AIROOTFS/etc/"
 cp /etc/pacman.d/mirrorlist "$AIROOTFS/etc/pacman.d/"
 
-arch-chroot "$AIROOTFS" systemctl enable gdm
 
+mkdir -p "$AIROOTFS/etc/lightdm"
+sed -i 's/^#autologin-user=.*/autologin-user=root/' "$AIROOTFS/etc/lightdm/lightdm.conf"
+sed -i 's/^#autologin-session=.*/autologin-session=cinnamon/' "$AIROOTFS/etc/lightdm/lightdm.conf"
 
 # chroot先で archiso パッケージをインストール
 
 # archisoパッケージ導入とHOOKS設定
+mkdir -p "$AIROOTFS/usr/share/backgrounds/gnome"
+cp image.png "$AIROOTFS/usr/share/backgrounds/gnome/"
+mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
+cat <<EOF > "$AIROOTFS/etc/dconf/db/local.d/00-wallpaper"
+[org/cinnamon/desktop/background]
+picture-uri='file:///usr/share/backgrounds/gnome/image.png'
+EOF
+
+
+mkdir -p "$AIROOTFS/etc/profile.d"
+cat <<'EOF' > "$AIROOTFS/etc/profile.d/fcitx5.sh"
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+EOF
+mkdir -p "$AIROOTFS/etc/skel/.config"
+cat <<EOF > "$AIROOTFS/etc/skel/.config/user-dirs.locale"
+ja_JP
+EOF
+
+arch-chroot "$AIROOTFS" dconf update
+arch-chroot "$AIROOTFS" systemctl set-default graphical.target
+arch-chroot "$AIROOTFS" systemctl enable lightdm
 
 
 sed -i 's/^HOOKS=.*/HOOKS=(base udev archiso block filesystems keyboard fsck)/' \

@@ -25,25 +25,37 @@ mkdir -p "$AIROOTFS" "$ISO_ROOT" "$OUTPUT"
 
 # ===== ベースシステム作成 =====
 echo "[*] ベースシステムを pacstrap でインストール..."
-pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xorg-server
+pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xorg-server noto-fonts noto-fonts-cjk noto-fonts-emoji fcitx5-im fcitx5-mozc fcitx5-configtool papirus-icon-theme eog
 # ===== 設定ファイル追加 =====
 echo "[*] 基本設定を投入..."
 echo "keita" > "$AIROOTFS/etc/hostname"
+
 cat <<EOF > "$AIROOTFS/etc/vconsole.conf"
-KEYMAP=us
+KEYMAP=jp106
 FONT=Lat2-Terminus16
 EOF
 
 cat <<EOF > "$AIROOTFS/etc/locale.gen"
 en_US.UTF-8 UTF-8
+ja_JP.UTF-8 UTF-8
 EOF
 
-
-
+mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
+cat <<EOF > "$AIROOTFS/etc/dconf/db/local.d/01-cinnamon"
+[org/cinnamon/desktop/interface]
+gtk-theme='Arc-Dark'
+icon-theme='Papirus'
+cursor-theme='Adwaita'
+EOF
+cat <<EOF > "$AIROOTFS/etc/dconf/db/local.d/05-language"
+[org/cinnamon/desktop/interface]
+gtk-im-module='ibus'
+EOF
 arch-chroot "$AIROOTFS" locale-gen
 mkdir -p "$AIROOTFS/etc/pacman.d"
 cp /etc/pacman.conf "$AIROOTFS/etc/"
 cp /etc/pacman.d/mirrorlist "$AIROOTFS/etc/pacman.d/"
+echo "LANG=ja_JP.UTF-8" > "$AIROOTFS/etc/locale.conf"
 
 
 mkdir -p "$AIROOTFS/etc/lightdm"
@@ -53,19 +65,31 @@ sed -i 's/^#autologin-session=.*/autologin-session=cinnamon/' "$AIROOTFS/etc/lig
 # chroot先で archiso パッケージをインストール
 
 # archisoパッケージ導入とHOOKS設定
-mkdir -p "$AIROOTFS/usr/share/backgrounds"
-cp image.png "$AIROOTFS/usr/share/backgrounds/"
+mkdir -p "$AIROOTFS/usr/share/backgrounds/gnome"
+cp image.png "$AIROOTFS/usr/share/backgrounds/gnome/"
 mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
 cat <<EOF > "$AIROOTFS/etc/dconf/db/local.d/00-wallpaper"
 [org/cinnamon/desktop/background]
-picture-uri='file:///usr/share/backgrounds/image.png'
+picture-uri='file:///usr/share/backgrounds/gnome/image.png'
 EOF
 
-arch-chroot "$AIROOTFS" dconf update
+
+mkdir -p "$AIROOTFS/etc/profile.d"
+cat <<'EOF' > "$AIROOTFS/etc/profile.d/fcitx5.sh"
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+EOF
+mkdir -p "$AIROOTFS/etc/skel/.config"
+cat <<EOF > "$AIROOTFS/etc/skel/.config/user-dirs.locale"
+ja_JP
+EOF
+
+
 arch-chroot "$AIROOTFS" systemctl set-default graphical.target
 arch-chroot "$AIROOTFS" systemctl enable lightdm
 
-
+arch-chroot "$AIROOTFS" dconf update
 sed -i 's/^HOOKS=.*/HOOKS=(base udev archiso block filesystems keyboard fsck)/' \
     "$AIROOTFS/etc/mkinitcpio.conf"
 

@@ -116,6 +116,91 @@ sed -i 's/^#autologin-session=.*/autologin-session=cinnamon/' "$AIROOTFS/etc/lig
 # chroot先で archiso パッケージをインストール
 mkdir -p /etc/calamares
 mkdir -p "$AIROOTFS/etc/calamares/modules"
+#!/bin/bash
+
+MODULE_DIR="$AIROOTFS/etc/calamares/modules"
+
+mkdir -p "$MODULE_DIR"
+
+# welcome.yaml
+cat <<EOF > "$MODULE_DIR/welcome.yaml"
+---
+type: "job"
+interface: "qt"
+name: "welcome"
+config:
+  showSupportUrl: false
+  showKnownIssuesUrl: false
+  showReleaseNotesUrl: false
+EOF
+
+# locale.yaml
+cat <<EOF > "$MODULE_DIR/locale.yaml"
+---
+type: "job"
+interface: "qt"
+name: "locale"
+config:
+  defaultLocale: "ja_JP.UTF-8"
+  zone: "Asia/Tokyo"
+EOF
+
+# keyboard.yaml
+cat <<EOF > "$MODULE_DIR/keyboard.yaml"
+---
+type: "job"
+interface: "qt"
+name: "keyboard"
+config:
+  defaultLayout: "jp"
+  defaultVariant: ""
+EOF
+
+# users.yaml
+cat <<EOF > "$MODULE_DIR/users.yaml"
+---
+type: "job"
+interface: "qt"
+name: "users"
+config:
+  allowEmptyPassword: false
+  setPasswordForRoot: true
+EOF
+
+# partition.yaml
+cat <<EOF > "$MODULE_DIR/partition.yaml"
+---
+type: "job"
+interface: "qt"
+name: "partition"
+config:
+  allowManualPartitioning: true
+  defaultFileSystemType: "ext4"
+  initialPartitioningChoice: "erase"
+EOF
+
+# install.yaml
+cat <<EOF > "$MODULE_DIR/install.yaml"
+---
+type: "job"
+interface: "none"
+name: "install"
+config:
+  showInstallProgress: true
+EOF
+
+# finished.yaml
+cat <<EOF > "$MODULE_DIR/finished.yaml"
+---
+type: "job"
+interface: "qt"
+name: "finished"
+config:
+  restartNowEnabled: true
+  restartNowChecked: true
+EOF
+
+echo "Calamares モジュールの作成が完了しました。"
 
 # settings.conf の例
 cat <<EOF > "$AIROOTFS/etc/calamares/settings.conf"
@@ -123,7 +208,7 @@ cat <<EOF > "$AIROOTFS/etc/calamares/settings.conf"
 modules-search:
   - /etc/calamares/modules
 sequence:
-  - showWelcome
+  - welcome
   - locale
   - keyboard
   - partition

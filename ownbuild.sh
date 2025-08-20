@@ -54,14 +54,7 @@ EOF
 mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
 
 # liveuser を作成（ホームディレクトリ付き）
-useradd -m -G wheel frank
 
-# パスワードを設定（例: "liveuser"）
-echo "frank:frank" | chpasswd
-
-# sudo 権限をパスワードなしで許可
-echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99_frank_nopasswd
-chmod 440 /etc/sudoers.d/99_frank_nopasswd
 
 
 arch-chroot "$AIROOTFS" locale-gen

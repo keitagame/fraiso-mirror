@@ -36,7 +36,8 @@ mkfs.ext4 "$AIROOTFS_IMG"
 mkdir -p "$AIROOTFS_MOUNT"
 mount -o loop "$AIROOTFS_IMG" "$AIROOTFS_MOUNT"
 AIROOTFS="$AIROOTFS_MOUNT"
-pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xorg-server noto-fonts noto-fonts-cjk base-devel fakeroot debugedit git sudo go noto-fonts-emoji fcitx5-im fcitx5-mozc fcitx5-configtool papirus-icon-theme eog
+pacstrap  "$AIROOTFS" base linux linux-firmware vim networkmanager archiso mkinitcpio-archiso cinnamon lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xorg-server noto-fonts noto-fonts-cjk base-devel fakeroot debugedit git sudo go noto-fonts-emoji fcitx5-im fcitx5-mozc fcitx5-configtool papirus-icon-theme eog alacritty
+
 # ===== 設定ファイル追加 =====
 echo "[*] 基本設定を投入..."
 echo "keita" > "$AIROOTFS/etc/hostname"
@@ -52,6 +53,15 @@ EOF
 
 mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
 
+# liveuser を作成（ホームディレクトリ付き）
+useradd -m -G wheel frank
+
+# パスワードを設定（例: "liveuser"）
+echo "frank:frank" | chpasswd
+
+# sudo 権限をパスワードなしで許可
+echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99_frank_nopasswd
+chmod 440 /etc/sudoers.d/99_frank_nopasswd
 
 
 arch-chroot "$AIROOTFS" locale-gen
@@ -89,11 +99,13 @@ su - aur -c '
   set -euxo pipefail
   yay -S --noconfirm --needed mint-themes
 '
-su - aur -c 'yay -S --noconfirm --needed calamares-bin'
+su - aur -c 'yay -S --noconfirm --needed calamares-git'
 
 # 5) 片付け（ISOサイズ削減）
 rm -rf /home/aur/build /home/aur/.cache
 yes | pacman -Scc || true
+userdel -r aur || true
+
 
 CHROOT
 

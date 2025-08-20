@@ -49,7 +49,9 @@ EOF
 
 cat <<EOF > "$AIROOTFS/etc/locale.gen"
 en_US.UTF-8 UTF-8
+ja_JP.UTF-8 UTF-8
 EOF
+sudo sed -i '/C.UTF-8 UTF-8/d' /etc/locale.gen
 
 mkdir -p "$AIROOTFS/etc/dconf/db/local.d"
 
@@ -197,7 +199,6 @@ echo "Calamares モジュールの作成が完了しました。"
 
 # settings.conf の例
 cat <<EOF > "$AIROOTFS/etc/calamares/settings.conf"
----
 modules-search:
   - /etc/calamares/modules
 sequence:
